@@ -1,0 +1,11 @@
+.DS_Store
+__pycache__/
+research/**/target/
+research/**/__pycache__/
+research/benchmark_outputs/
+research/quality_outputs/
+research/subject_outputs/
+research/user_results/
+research/qart-perceptual/phase2_outputs/
+research/qart-perceptual/phase11c_outputs/
+research/exact_payload_bakeoff_outputs/
