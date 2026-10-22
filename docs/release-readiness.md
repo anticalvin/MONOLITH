@@ -10,6 +10,13 @@
 
 The preserved safe-core astronaut, camera, and cat exports decoded to `https://example.com` with OpenCV and ZBar in the Sprint 12 release audit. The exact-payload bake-off results are retained under `research/exact_payload_bakeoff_outputs/` and are not production code.
 
+## Standard QR export hardening
+
+- Standard exports now bind an immutable payload/SVG/render snapshot to verification and download filenames.
+- PNG exports use an integer QR-module pitch and disable smoothing. A Chromium-generated URL PNG (`1036×1036`, 28px pitch including quiet zone) decoded to exact `https://example.com` with OpenCV and ZBar.
+- The corresponding downloaded SVG, independently rasterized at `1036×1036`, decoded with ZBar; OpenCV returned a false negative. Browser `BarcodeDetector` remains supplementary evidence only.
+- The currently completed release evidence covers the production URL/default appearance. The remaining content-format and browser/device matrix is documented as incomplete in the RC1 report.
+
 ## Experimental / excluded
 
 - Portrait Effect is visual QR artwork, not a photorealistic portrait promise.

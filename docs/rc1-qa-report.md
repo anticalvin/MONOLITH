@@ -17,6 +17,8 @@ Date: 2026-10-22 (Africa/Johannesburg)
 | Production page runtime | PASS | Page loaded over HTTP without observed startup/runtime failure |
 | Standard controls | PASS (smoke) | Encoding, geometry, error-correction, raster-size and export controls were exposed and keyboard-focusable in browser accessibility tree |
 | Standard query/fragment input | PASS | Chromium accepted `https://example.com/path?alpha=1&name=monolith#section` and regenerated the live design before export automation timed out |
+| Standard URL PNG export, hardened | PASS | Fresh Chromium export `monolith-qr-verified-r2-1036.png` decoded exact `https://example.com` with OpenCV and ZBar |
+| Standard URL SVG export, hardened | PASS (ZBar) | Downloaded SVG independently rasterized to `1036×1036`; ZBar decoded exact payload; OpenCV returned a false negative |
 
 ## Automated evidence retained from prior release work
 
@@ -32,6 +34,8 @@ Date: 2026-10-22 (Africa/Johannesburg)
 - 1440/1024/768/390/320 layout screenshots.
 - Safari, Firefox, iPhone, and Android device testing.
 - Complete keyboard-only traversal and touch-device interaction.
+- Full independent export matrix for plain text, email, phone, SMS, Wi-Fi and vCard.
+- Full preset/geometry/error-correction/logo matrix and distortion testing.
 
 ## Browser automation blocker
 
