@@ -1,0 +1,56 @@
+{
+  "payload": "https://example.com",
+  "subjects": {
+    "astronaut": {
+      "results": {
+        "known_good_research_png": {
+          "opencv": "https://example.com",
+          "zbar": "https://example.com"
+        },
+        "browser_png": {
+          "opencv": "https://example.com",
+          "zbar": "DECODE FAILED"
+        },
+        "svg_rasterized_1776": {
+          "opencv": "https://example.com",
+          "zbar": "DECODE FAILED"
+        }
+      },
+      "classification": "FAIL"
+    },
+    "camera": {
+      "results": {
+        "known_good_research_png": {
+          "opencv": "https://example.com",
+          "zbar": "https://example.com"
+        },
+        "browser_png": {
+          "opencv": "https://example.com",
+          "zbar": "DECODE FAILED"
+        },
+        "svg_rasterized_1776": {
+          "opencv": "https://example.com",
+          "zbar": "DECODE FAILED"
+        }
+      },
+      "classification": "FAIL"
+    },
+    "cat": {
+      "results": {
+        "known_good_research_png": {
+          "opencv": "https://example.com",
+          "zbar": "https://example.com"
+        },
+        "browser_png": {
+          "opencv": "https://example.com",
+          "zbar": "DECODE FAILED"
+        },
+        "svg_rasterized_1776": {
+          "opencv": "https://example.com",
+          "zbar": "DECODE FAILED"
+        }
+      },
+      "classification": "FAIL"
+    }
+  }
+}

@@ -1,15 +1,17 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  let image = null, svg = '', payload = '', verification = 'UNVERIFIED', timer, revision = 0, exportReady = false;
+  let image = null, timer, revision = 0, latestRender = null;
   const isFunction = (x, y, n) => {
     const finder = (a, b) => x >= a - 1 && x <= a + 7 && y >= b - 1 && y <= b + 7;
     return finder(0, 0) || finder(n - 7, 0) || finder(0, n - 7) || x === 6 || y === 6 || x === 8 || y === 8;
   };
   const setError = text => { $('portraitError').textContent = text; };
-  function status(value, detail) {
-    verification = value; $('portraitVerify').textContent = value; $('portraitVerifyInfo').textContent = detail;
-    $('portraitExportInfo').textContent = value === 'VERIFIED' ? 'EXPORTS MATCH THE BROWSER-VERIFIED PREVIEW.' : 'EXPORTS ARE MARKED ' + value + '. SCAN THE FINAL FILE BEFORE USE.';
+  function status(snapshot, value, detail) {
+    if (snapshot && latestRender !== snapshot) return;
+    if (snapshot) { snapshot.verification = value; snapshot.ready = value !== 'CHECKING'; }
+    $('portraitVerify').textContent = value; $('portraitVerifyInfo').textContent = detail;
+    $('portraitExportInfo').textContent = value === 'VERIFIED' ? 'EXPORTS MATCH THIS BROWSER-VERIFIED RENDER.' : 'EXPORTS ARE MARKED ' + value + '. SCAN THE FINAL FILE BEFORE USE.';
   }
   function sourceCanvas() {
     const s = 840, canvas = $('portraitSource'), ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -44,35 +46,40 @@
     warn.hidden = mode === 'safe';
     warn.textContent = mode === 'image-first' ? 'EXPERIMENTAL ARTWORK / SCANNING NOT VERIFIED UNTIL THIS EXACT OUTPUT DECODES.' : 'BALANCED V2 IS EXPERIMENTAL. EXPORT STATUS WILL REFLECT THIS CURRENT RENDER.';
   }
-  function buildQR() {
-    payload = $('portraitUrl').value.trim();
+  function buildQR(payload) {
     if (!/^https?:\/\/\S+$/i.test(payload)) throw Error('Enter a complete http:// or https:// URL.');
     const qr = new QRCode(0, ECL.H), binary = Array.from(new TextEncoder().encode(payload), b => String.fromCharCode(b)).join('');
     qr.addData(binary); qr.make(); return qr;
   }
-  async function verify(rendered, rev) {
+  async function rasterize(snapshot) {
+    const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(snapshot.svg); await im.decode();
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = snapshot.rasterSize;
+    const ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(im, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  }
+  async function verify(snapshot) {
     try {
       if (!('BarcodeDetector' in window)) throw Error('Browser decoder unavailable');
-      const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(rendered); await im.decode();
-      const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1200; canvas.getContext('2d').drawImage(im, 0, 0, 1200, 1200);
+      const canvas = await rasterize(snapshot);
       const found = await new BarcodeDetector({ formats: ['qr_code'] }).detect(canvas);
-      if (rev !== revision) return;
-      const exact = found.some(item => item.rawValue === payload); exportReady = true;
-      status(exact ? 'VERIFIED' : 'FAILED', exact ? 'Exact URL matched in this browser.' : 'This rendered output did not decode to the exact URL.');
+      if (latestRender !== snapshot) return;
+      const exact = found.some(item => item.rawValue === snapshot.payload);
+      status(snapshot, exact ? 'VERIFIED' : 'FAILED', exact ? 'Exact URL matched in this browser.' : 'This rendered output did not decode to the exact URL.');
       $('portraitStatus').textContent = exact ? 'RENDERED / VERIFIED' : 'RENDERED / CHECK STATUS';
     } catch (_) {
-      if (rev === revision) { exportReady = true; status('UNVERIFIED', 'This browser has no usable QR decoder.'); $('portraitStatus').textContent = 'RENDERED / UNVERIFIED'; }
+      if (latestRender === snapshot) { status(snapshot, 'UNVERIFIED', 'This browser has no usable QR decoder.'); $('portraitStatus').textContent = 'RENDERED / UNVERIFIED'; }
     }
   }
   function render() {
     if (!image) return;
-    const started = performance.now(), rev = ++revision, mode = $('portraitInfluence').value;
+    const started = performance.now(), id = ++revision, mode = $('portraitInfluence').value, payload = $('portraitUrl').value.trim();
     try {
-      exportReady = false; $('portraitStatus').textContent = 'ANALYSING PHOTO'; status('CHECKING', 'Building the current photo-driven module field…');
-      const qr = buildQR(), source = sourceCanvas();
+      const snapshot = { id, mode, payload, svg: '', verification: 'CHECKING', ready: false };
+      latestRender = snapshot; $('portraitStatus').textContent = 'ANALYSING PHOTO'; status(snapshot, 'CHECKING', 'Building the current photo-driven module field…');
+      const qr = buildQR(payload), source = sourceCanvas();
       const result = mode === 'safe' ? safeCore(qr, source) : window.MonolithPortraitV2.render({ qr, source, mode, density: +$('portraitDensity').value / 100 });
-      svg = result.svg; $('portraitPreview').innerHTML = svg; $('portraitMatrix').textContent = qr.getModuleCount() + ' × ' + qr.getModuleCount();
-      setModeCopy(mode, result.analysis); $('portraitStatus').textContent = `RENDERED / ${(performance.now() - started).toFixed(0)}MS`; verify(svg, rev); setError('');
+      snapshot.svg = result.svg; const total = (qr.getModuleCount() + 8) * 16; snapshot.rasterSize = total * Math.max(2, Math.ceil(1200 / total)); $('portraitPreview').innerHTML = snapshot.svg; $('portraitMatrix').textContent = qr.getModuleCount() + ' × ' + qr.getModuleCount();
+      setModeCopy(mode, result.analysis); $('portraitStatus').textContent = `RENDERED / ${(performance.now() - started).toFixed(0)}MS`; verify(snapshot); setError('');
     } catch (error) { setError(error.message); $('portraitStatus').textContent = 'CHECK INPUT'; }
   }
   function schedule() { if (image) { clearTimeout(timer); timer = setTimeout(render, 110); } }
@@ -85,13 +92,13 @@
     reader.onerror = () => setError('The selected file could not be read.'); reader.readAsDataURL(file);
   }
   function download(blob, name) { const a = document.createElement('a'), url = URL.createObjectURL(blob); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500); }
-  function exportedName(extension) { return `monolith-portrait-${$('portraitInfluence').value}-${verification.toLowerCase()}.${extension}`; }
+  function exportedName(snapshot, extension) { return `monolith-portrait-${snapshot.mode}-${snapshot.verification.toLowerCase()}-r${snapshot.id}.${extension}`; }
   $('portraitFile').addEventListener('change', event => load(event.target.files[0]));
   $('portraitDrop').addEventListener('dragover', event => { event.preventDefault(); $('portraitDrop').classList.add('is-dragging'); });
   $('portraitDrop').addEventListener('dragleave', () => $('portraitDrop').classList.remove('is-dragging'));
   $('portraitDrop').addEventListener('drop', event => { event.preventDefault(); $('portraitDrop').classList.remove('is-dragging'); load(event.dataTransfer.files[0]); });
-  ['portraitUrl', 'portraitInfluence', 'portraitZoom', 'portraitPan', 'portraitPanY', 'portraitExposure', 'portraitContrast', 'portraitThreshold', 'portraitDensity'].forEach(id => $(id).addEventListener('input', () => { exportReady = false; revision++; status('CHECKING', 'Control changed; rebuilding the preview…'); schedule(); }));
+  ['portraitUrl', 'portraitInfluence', 'portraitZoom', 'portraitPan', 'portraitPanY', 'portraitExposure', 'portraitContrast', 'portraitThreshold', 'portraitDensity'].forEach(id => $(id).addEventListener('input', () => { revision++; latestRender = null; status(null, 'CHECKING', 'Control changed; rebuilding the preview…'); schedule(); }));
   $('portraitGenerate').onclick = () => image ? render() : setError('Upload a photo first.');
-  $('portraitPng').onclick = () => { if (!svg) return setError('Generate a portrait first.'); if (!exportReady) return setError('Wait for the latest render and verification status before exporting.'); const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 1200; c.getContext('2d').drawImage(im, 0, 0, 1200, 1200); c.toBlob(blob => blob && download(blob, exportedName('png')), 'image/png'); }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); };
-  $('portraitSvg').onclick = () => !svg ? setError('Generate a portrait first.') : !exportReady ? setError('Wait for the latest render and verification status before exporting.') : download(new Blob([svg], { type: 'image/svg+xml' }), exportedName('svg'));
+  $('portraitPng').onclick = async () => { const snapshot = latestRender; if (!snapshot) return setError('Generate a portrait first.'); if (!snapshot.ready) return setError('Wait for the latest render and verification status before exporting.'); try { const canvas = await rasterize(snapshot); canvas.toBlob(blob => blob && download(blob, exportedName(snapshot, 'png')), 'image/png'); } catch (_) { setError('PNG export could not rasterize this render.'); } };
+  $('portraitSvg').onclick = () => { const snapshot = latestRender; return !snapshot ? setError('Generate a portrait first.') : !snapshot.ready ? setError('Wait for the latest render and verification status before exporting.') : download(new Blob([snapshot.svg], { type: 'image/svg+xml' }), exportedName(snapshot, 'svg')); };
 })();

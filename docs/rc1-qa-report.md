@@ -43,6 +43,7 @@ The real Chromium session loaded the local HTTP app and accepted the query/fragm
 - Browser verification is not a physical-device scanning guarantee.
 - QArt remains offline research only and is not a product feature.
 - QR Portrait V2 browser prototype results are retained on `feature/qr-portrait-v2`; this failed the visual-recognisability gate and must not be released as a product feature.
+- Its export-closure evidence is retained in `research/portrait-v2/export-regression/`: the original 1200px non-integral SVG raster was decoder-fragile. Snapshot-bound 1776px exports solve the OpenCV failure but still fail ZBar; browser decode badges are therefore not treated as release verification.
 
 ## Launch blockers
 

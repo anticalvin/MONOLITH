@@ -31,6 +31,14 @@ Serve the repository from a loopback static HTTP server, upload the three fixtur
 
 OpenCV decoded the observed `cat-balanced-verified.png` to the exact payload. OpenCV failed the observed astronaut SAFE, cat SAFE, and cat IMAGE-FIRST exports. ZBar failed all four observed exports. These raw results are in `decoder-benchmark.json`; therefore none of these candidates is dual-decoder **VERIFIED**. The browser status is intentionally not treated as a replacement for the offline gate.
 
+## Export verification closure
+
+The initial V2 browser PNG export drew the 592-unit SVG into a 1200px canvas. That gives a non-integral 32.432px module pitch for a 29×29 QR with a four-module quiet zone; the exported astronaut SAFE PNG failed both offline decoders despite an in-browser `BarcodeDetector` pass. The SVG itself rasterized independently at controlled size decoded with OpenCV, and the known-good 405px research SAFE PNG decoded with OpenCV and ZBar.
+
+The export code now snapshots the render ID, payload, SVG, selected mode, verification status and filename together. It rasterizes at an integer module pitch: 1776px for this matrix (48px/module), with image smoothing disabled. New controlled astronaut, camera and cat browser PNGs all decode to the exact payload with OpenCV. ZBar still fails those photo-effect exports, while it passes every known-good research SAFE reference. Thus SAFE browser exports are **OpenCV-only PASS / dual-decoder FAIL**, not fully verified for release.
+
+Run `python3 research/portrait-v2/export_regression.py` to reproduce the controlled regression. It rasterizes direct SVG at 1776px, records image artifacts, and runs OpenCV and ZBar separately.
+
 ## Decision
 
 Do not merge V2 into `main` or deploy it. The controls and renderer remain on this feature branch as a documented, truthful prototype.
