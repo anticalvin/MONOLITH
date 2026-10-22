@@ -14,6 +14,7 @@ The preserved safe-core astronaut, camera, and cat exports decoded to `https://e
 
 - Portrait Effect is visual QR artwork, not a photorealistic portrait promise.
 - QArt and fragment-modified URLs remain offline research only and are not reachable from the interface.
+- QR Portrait V2 is a feature-branch-only browser prototype. Its BALANCED renderer browser-decodes for the three reference fixtures, but its subject structure is not yet recognisable without the source image. IMAGE-FIRST fails browser decoding for those fixtures. It is not integrated into `main` or the public deployment.
 
 ## Known limitations
 

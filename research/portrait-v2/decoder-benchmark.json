@@ -1,0 +1,9 @@
+{
+  "files": {
+    "astronaut-safe-verified.png": {"browser": "VERIFIED", "opencv": "DECODE FAILED", "zbar": "DECODE FAILED"},
+    "cat-safe-verified.png": {"browser": "VERIFIED", "opencv": "DECODE FAILED", "zbar": "DECODE FAILED"},
+    "cat-balanced-verified.png": {"browser": "VERIFIED", "opencv": "https://example.com", "zbar": "DECODE FAILED"},
+    "cat-image-first-failed.png": {"browser": "FAILED", "opencv": "DECODE FAILED", "zbar": "DECODE FAILED"}
+  },
+  "classification": "No candidate is dual-decoder verified. Browser BarcodeDetector status is retained separately and must not be presented as a stronger offline verification result."
+}

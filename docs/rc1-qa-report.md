@@ -42,6 +42,7 @@ The real Chromium session loaded the local HTTP app and accepted the query/fragm
 - Portrait Effect remains experimental and browser verification depends on `BarcodeDetector`.
 - Browser verification is not a physical-device scanning guarantee.
 - QArt remains offline research only and is not a product feature.
+- QR Portrait V2 browser prototype results are retained on `feature/qr-portrait-v2`; this failed the visual-recognisability gate and must not be released as a product feature.
 
 ## Launch blockers
 

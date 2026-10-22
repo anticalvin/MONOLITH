@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-22",
+  "payload": "https://example.com",
+  "decoder": "Chromium BarcodeDetector",
+  "fixtures": {
+    "astronaut": {"safe": "VERIFIED", "balanced": "VERIFIED", "image_first": "FAILED", "image_first_photo_field_percent": 85},
+    "camera": {"safe": "VERIFIED", "balanced": "VERIFIED", "image_first": "FAILED"},
+    "cat": {"safe": "FAILED", "balanced": "VERIFIED", "image_first": "FAILED"}
+  },
+  "conclusion": "BALANCED preserved browser decoding but did not preserve recognisable subject structure. IMAGE-FIRST was visually distinct but undecodable."
+}
